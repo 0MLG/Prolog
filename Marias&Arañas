@@ -1,0 +1,153 @@
+:- module(_,_,[classic,assertions,regtypes,nativeprops]).
+:-doc(hide,[author_data/4, call_in_module/2]).
+:- doc(title, "MARIAS Y ARAÑAS").
+
+:- doc(module, "@subsection{Particiones M-arias de un número}
+Dada una partción de un número entero N  un conjunto de números enteros positivos que suman N, escritos en orden descendente. Por ejemplo,
+@begin{verbatim}
+10 = 4+3+2+1
+@end{verbatim}
+
+Una partición es M-aria si cada término de dicha partición es una potencia de M. Por ejemplo,
+@begin{verbatim}
+Particiones 3-arias de 9:
+9
+3+3+3
+3+3+1+1+1
+3+1+1+1+1+1+1
+1+1+1+1+1+1+1+1+1
+@end{verbatim}
+
+@subsection{Arañas de expansión de un grafo}
+Una araña de expansión de un grafo se define como un árbol de expansión que además es una araña. 
+
+Un árbol de expansión es un sub-grafo que es un árbol y que contiene todos los vértices del grafo. 
+
+Una araña es un grafo con como máximo un vértice cuyo grado —número de aristas incidentes a él— es 3 o más. 
+
+Por tanto, una araña de expansión de un grafo es un sub-grafo que es un árbol, contiene todos los vértices del grafo, y como máximo un sólo vértice de grado 3 o más.
+
+Un ejemplo de grafo que contiene una araña de expansión sería
+@begin{verbatim}
+arista(d,a),
+arista(d,b),
+arista(d,c),
+arista(d,e),
+arista(a,x),
+arista(b,y),
+arista(c,z),
+arista(a,b),
+arista(y,c)
+@end{verbatim}
+").
+
+:-pred pots(M,N,Ps) #"@var{Ps} es una lista con las potencias de @var{M} que son menores o iguales que @var{N}, en orden descendente. @includedef{pots/3}".
+pots(1,_,[P]):-
+    P is 1.
+
+pots(M,N,Ps):-
+    M>1,
+    pots2(M,N,P,0),
+    reverse(P,Ps).
+
+:-test pots(M,N,Ps): (M=3, N=9) => (Ps=[9,3,1]) + not_fails.
+:-test pots(M,N,Ps): (M=5, N=123) => (Ps=[25,5,1]) + not_fails.
+
+:-pred pots2(M,N,Ps,C) #"Auxiliar recursiva para pots con un contador añadido @var{C}. @includedef{pots2/4}".
+
+pots2(M,N,[P|Ps],C):-
+    C1 is C+1,
+    Q is M**C1,
+    Q=<N,
+    P1 is M**C,
+    P is round(P1),
+    pots2(M,N,Ps,C1).
+
+pots2(M,N,[P],C):-
+    C1 is C+1,
+    Q is M**C1,
+    Q>N,
+    P1 is M**C,
+    P is round(P1).
+
+:-pred mpart(M,N,P) #"La lista @var{P} devuelve por backtracking todas las particiones @var{M}-arias de @var{N}, representadas como listas de enteros. @includedef{mpart/3}".
+
+mpart(M,N,P):-
+    pots(M,N,A),
+    mpart2(M,N,P,A,0).
+
+:-test mpart(M,N,P): (M=3, N=9) => (P = [9];
+    P = [3,3,3];
+        P = [3,3,1,1,1];
+            P = [3,1,1,1,1,1,1];
+                P = [1,1,1,1,1,1,1,1,1])
+  + (try_sols(10), not_fails).
+
+:-test mpart(M,N,P): (M=5, N=26) => (P = [25,1];
+    P = [5,5,5,5,5,1];
+        P = [5,5,5,5,1,1,1,1,1,1];
+            P = [5,5,5,1,1,1,1,1,1,1,1,1,1,1];
+                P = [5,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+                    P = [5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+                        P = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1])
+  + (try_sols(10), not_fails).
+
+:-pred mpart2(M,N,P,A,C) #"Auxiliar recursiva para mpart. @includedef{mpart2/5}".
+
+mpart2(M,N,[P|Ps],[A|As],C):-
+    C1 is C+A,
+    C1<N,
+    P is A,
+    mpart2(M,N,Ps,[A|As],C1);
+        C1 is C+A,
+        C1=:=N,
+        asignar([P|Ps],A);
+            mpart2(M,N,[P|Ps],As,C).
+
+:-pred asignar(X,X) #"Auxiliar que iguala una lista [@var{A}] a @var{A}. @includedef{asignar/2}".
+
+asignar([X],X).
+
+:-pred maria(M,N,NPart) #"@var{NPart} es el número de particiones @var{M}-arias de @var{N}. @includedef{maria/3}".
+
+:-test maria(M,N,NPart): (M=3, N=9) => (NPart=5) + not_fails.
+:-test maria(M,N,NPart): (M=5, N=26) => (NPart=7) + not_fails.
+
+maria(M,N,NPart):-
+    findall(A,mpart(M,N,A),B),
+    length(B,NPart).
+
+:- pred arista(X,Y) #"Arista que conecta el vértice @var{X} con el vértice @var{Y}".
+:-dynamic arista/2.
+
+:-pred guardar_grafo(G) #"Aserta en la base de datos como hechos del predicado arista/2 los elementos de @var{G}.@includedef{guardar_grafo/1}".
+
+guardar_grafo(G):-
+    retractall(arista(_,_)),
+    guardar_grafo2(G).
+
+:-test guardar_grafo(G): (G=[arista(a,e), arista(b,e), arista(e,f), arista(f,d), arista(f,c)]) + not_fails.
+:-test arista(X,Y) => (X = a, Y = e;
+    X = b, Y = e;
+        X = e, Y = f;
+            X = f, Y = d;
+                X = f, Y = c)
+  + (try_sols(10), not_fails).
+:-test arista(X,Y): (X=a, Y=b) + fails.
+
+:-test guardar_grafo(G): (G=[arista(a,b), arista(b,c), arista(c,d), arista(d,e), arista(e,f)]) + not_fails.
+:-test arista(X,Y) => (X = a, Y = b;
+    X = b, Y = c;
+        X = c, Y = d;
+            X = d, Y = e;
+                X = e, Y = f)
+  + (try_sols(10), not_fails).
+:-test arista(X,Y): (X=f, Y=a) + fails.
+
+:-pred guardar_grafo2(G) #"Auxiliar recursiva para guardar_grafo.@includedef{guardar_grafo2/1}".
+
+guardar_grafo2([G|Gs]):-
+    assert(G),
+    guardar_grafo2(Gs).
+
+guardar_grafo2([]).
