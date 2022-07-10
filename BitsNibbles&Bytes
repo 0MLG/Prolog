@@ -1,0 +1,261 @@
+:- module(_,_,[assertions]).
+:- doc(hide,[author_data/4]).
+:- doc(title, "BITS, NIBBLES & BYTES").
+:- doc(module, "Este módulo permite la representación de números en formato binario o hexadecimal, así como realizar determinadas operaciones sobre estos.
+
+Los números serán representados de la forma: 
+bind(0),
+hexd(0).
+@subsection{Ejemplos de uso:}
+
+@begin{enumerate}
+@item Conversión de un número en formato hexadecimal a formato binario:
+@begin{verbatim}
+?- byte_conversion([hexd(a), hexd(1)], B).
+
+B = [bind(1), bind(0), bind(1), bind(0), bind(0), bind(0),
+bind(0), bind(1)] ? ;
+
+no
+?- 
+@end{verbatim}
+@item Obtención del enésimo bit de un byte:
+@begin{verbatim}
+?- get_nth_bit_from_byte(s(s(s(s(s(0))))), [hexd(a), hexd(c)],
+B).
+
+B = bind(1) ? ;
+
+no
+?- 
+@end{verbatim}
+@end{enumerate}
+").
+
+:- prop bind(A) #"@var{A} es un digito binario. @includedef{bind/1}".
+bind(0).
+bind(1).
+
+:- prop hexd(A) #"@var{A} es un digito hexadecimal. @includedef{hexd/1}".
+hexd(0).
+hexd(1).
+hexd(2).
+hexd(3).
+hexd(4).
+hexd(5).
+hexd(6).
+hexd(7).
+hexd(8).
+hexd(9).
+hexd(a).
+hexd(b).
+hexd(c).
+hexd(d).
+hexd(e).
+hexd(f).
+
+:-prop binary_byte(A) #"@var{A} es un byte binario. @includedef{binary_byte/1}".
+binary_byte([bind(B7), bind(B6), bind(B5), bind(B4), bind(B3), bind(B2), bind(B1), bind(B0)]) :-
+    bind(B7),
+    bind(B6),
+    bind(B5),
+    bind(B4),
+    bind(B3),
+    bind(B2),
+    bind(B1),
+    bind(B0).
+
+:-prop hex_byte(A) #"@var{A} es un byte hexadecimal. @includedef{hex_byte/1}".
+hex_byte([hexd(H1), hexd(H0)]) :-
+    hexd(H1), hexd(H0).
+
+:-prop byte(A) #"@var{A} es un byte deciaml o hexadecimal. @includedef{byte/1}".
+byte(BB) :-
+    binary_byte(BB).
+byte(HB) :-
+    hex_byte(HB).
+
+:-pred byte_list(A) #"@var{A} es una lista de bytes binarios o hexadecimales. @includedef{byte_list/1}".
+byte_list([ ]).
+byte_list([X|Xs]):-
+    byte(X),byte_list(Xs).
+
+:- test byte_list(A): (A = [[bind(0), bind(0), bind(0), bind(0), bind(0), bind(0), bind(0), bind(0)], [bind(0), bind(0), bind(0), bind(0), bind(0), bind(0), bind(0), bind(0)]]) + not_fails.
+
+:-pred byte_conversion(A,B) #"@var{A} es un byte hexadecimal y @var{B} es el byte binario equivalente. @includedef{byte_conversion/2}".
+byte_conversion([X,Y],Z):-
+    hex_equiv(X,A),
+    hex_equiv(Y,B),
+    juntar_listas(A,B,Z).
+
+:- test byte_conversion(A,B): (A = [hexd(a),hexd(1)]) => (B = [bind(1), bind(0), bind(1), bind(0), bind(0), bind(0), bind(0), bind(1)]) + not_fails.
+
+:-prop hex_equiv(A,B) #"@var{A}es un bit hexadecimal y @var{B} es el bit binario equivalente. @includedef{hex_equiv/2}".
+hex_equiv(hexd(0),[bind(0),bind(0),bind(0),bind(0)]).
+hex_equiv(hexd(1),[bind(0),bind(0),bind(0),bind(1)]).
+hex_equiv(hexd(2),[bind(0),bind(0),bind(1),bind(0)]).
+hex_equiv(hexd(3),[bind(0),bind(0),bind(1),bind(1)]).
+hex_equiv(hexd(4),[bind(0),bind(1),bind(0),bind(0)]).
+hex_equiv(hexd(5),[bind(0),bind(1),bind(0),bind(1)]).
+hex_equiv(hexd(6),[bind(0),bind(1),bind(1),bind(0)]).
+hex_equiv(hexd(7),[bind(0),bind(1),bind(1),bind(1)]).
+hex_equiv(hexd(8),[bind(1),bind(0),bind(0),bind(0)]).
+hex_equiv(hexd(9),[bind(1),bind(0),bind(0),bind(1)]).
+hex_equiv(hexd(a),[bind(1),bind(0),bind(1),bind(0)]).
+hex_equiv(hexd(b),[bind(1),bind(0),bind(1),bind(1)]).
+hex_equiv(hexd(c),[bind(1),bind(1),bind(0),bind(0)]).
+hex_equiv(hexd(d),[bind(1),bind(1),bind(0),bind(1)]).
+hex_equiv(hexd(e),[bind(1),bind(1),bind(1),bind(0)]).
+hex_equiv(hexd(f),[bind(1),bind(1),bind(1),bind(1)]).
+
+:-pred juntar_listas(A,B,C) #"@var{C} es la unificación de las listas @var{A} y @var{B}. @includedef{juntar_listas/3}".
+juntar_listas([],X,X).
+juntar_listas([X|Xs],Y,[X|Rs]):-
+    juntar_listas(Xs,Y,Rs).
+
+:-pred byte_list_conversion(A,B) #"@var{A} es una lista de bits hexadecimales y @var{B} es la lista de bits binarios equivalentes. @includedef{byte_list_conversion/2}".
+byte_list_conversion([X],[Y]):-
+    byte_conversion(X,Y).
+byte_list_conversion([X|Xs],[Y|Ys]):-
+    byte_conversion(X,Y),
+    byte_list_conversion(Xs,Ys).
+
+:- test  byte_list_conversion(A,B): (A = [[hexd(3), hexd(5)], [hexd(4), hexd(e)]]) => (B = [[bind(0), bind(0), bind(1), bind(1), bind(0), bind(1), bind(0), bind(1)], [bind(0), bind(1), bind(0), bind(0), bind(1), bind(1), bind(1), bind(0)]]) + not_fails.
+
+:-pred get_nth_bit_from_byte(A,B,C) #"@var{C} es el bit del byte @var{B} situado en la posición @var{A}. @includedef{get_nth_bit_from_byte/3}".
+get_nth_bit_from_byte(X,Y,Z):-
+    hex_byte(Y),
+    resta(s(s(s(s(s(s(s(0))))))),X,A),
+    byte_conversion(Y,B),
+    sacar_bit(A,B,Z);
+        binary_byte(Y),
+        resta(s(s(s(s(s(s(s(0))))))),X,A),
+        sacar_bit(A,Y,Z).
+
+:-test get_nth_bit_from_byte(A,B,C): (A = s(s(s(s(s(0))))), B = [bind(1), bind(0),bind(1), bind(0), bind(1), bind(1), bind(0), bind(0)]) => (C = bind(1)) + not_fails.
+
+:-test get_nth_bit_from_byte(A,B,C): (A = s(s(s(s(s(0))))), B = [hexd(a), hexd(c)]) => (C = bind(1)) + not_fails.
+
+:-pred resta(A,B,C) #"@var{C} es el resultado de restar @var{A} menos @var{B}. @includedef{resta/3}".
+resta(X,0,X).
+resta(0,_,0).
+resta(s(X),s(Y),Z) :-
+    resta(X,Y,Z).
+
+:-pred sacar_bit(A,B,C) #"@var{C} es el bit del byte @var{B} situado en la posicion siete menos @var{A}. @includedef{sacar_bit/3}".
+sacar_bit(0,[X|_],X).
+sacar_bit(s(X),[_|Yz],Z):-
+    sacar_bit(X,Yz,Z).
+
+:-pred byte_list_clsh(A,B) #"@var{B} es la lista de bytes @var{A} desplazada una posicion a la izquierda. @includedef{byte_list_clsh/2}".
+byte_list_clsh([X|Xs],Y):-
+    hex_byte(X),
+    byte_list_conversion([X|Xs],A),
+    unificar(A,B),
+    trasponer_izq(B,C),
+    restaurar(C,s(s(s(s(s(s(s(s(0)))))))),D),
+    byte_list_conversion_2(D,Y);
+        binary_byte(X),
+        unificar([X|Xs],B),
+        trasponer_izq(B,C),
+        restaurar(C,s(s(s(s(s(s(s(s(0)))))))),Y).
+
+:- test byte_list_clsh(A,B): (A = [[bind(0), bind(1), bind(0), bind(1), bind(1),bind(0),bind(0),bind(1)],[bind(0),bind(0),bind(1),bind(0),bind(0),bind(0),bind(1),bind(1)], [bind(0), bind(1), bind(0), bind(1),bind(0), bind(1), bind(0), bind(1)],[bind(0),bind(0),bind(1),bind(1),bind(0),bind(1),bind(1),bind(1)]]) => (B = [[bind(1),bind(0),bind(1),bind(1),bind(0),bind(0),bind(1),bind(0)],[bind(0),bind(1),bind(0),bind(0),bind(0),bind(1),bind(1),bind(0)],[bind(1),bind(0),bind(1),bind(0),bind(1),bind(0),bind(1),bind(0)],[bind(0),bind(1),bind(1),bind(0),bind(1),bind(1),bind(1),bind(0)]]) + not_fails.
+
+:- test byte_list_clsh(A,B): (A = [[hexd(5), hexd(a)], [hexd(2), hexd(3)], [hexd(5), hexd(5)], [hexd(3), hexd(7)]]) => (B = [[hexd(b), hexd(4)], [hexd(4), hexd(6)], [hexd(a), hexd(a)], [hexd(6), hexd(e)]]) + not_fails.
+
+:-pred unificar(A,B) #"@var{B} es la lista de listas @var{A} unificada en una unica lista. @includedef{unificar/2}".
+unificar([X],X).
+unificar([X|Y],Z):-
+    unificar(Y,A),
+    juntar_listas(X,A,Z).
+
+:-pred trasponer_izq(A,B) #"@var{B} es la lista de bits @var{A} unificada en una unica lista. @includedef{trasponer_izq/2}".
+trasponer_izq([X|Xs],Y):-
+    juntar_listas(Xs,[X],Y).
+
+:-pred restaurar(A,B,C) #"@var{C} agrupa la lista @var{A} en una lista de listas de @var{B} elementos. @includedef{restaurar/3}".
+restaurar([],_,[]).
+restaurar(X,Y,[Z|Zs]) :-
+    juntar_listas(Z,A,X),
+    longitud_lista(Z,Y),
+    restaurar(A,Y,Zs).
+
+:-pred longitud_lista(A,B) #"@var{B} es la longitud de la lista @var{A}. @includedef{longitud_lista/2}".
+longitud_lista([],0).
+longitud_lista([_|Xs],s(Y)):-
+    longitud_lista(Xs,Y).
+
+:-pred byte_list_conversion_2(A,B) #"@var{A} es una lista de bits binarios y @var{B} es la lista de bits hexadecimales equivalentes. @includedef{byte_list_conversion_2/2}".
+byte_list_conversion_2([X],[Y]):-
+    byte_conversion_2(X,Y).
+byte_list_conversion_2([X|Xs],[Y|Ys]):-
+    byte_conversion_2(X,Y),
+    byte_list_conversion_2(Xs,Ys).
+
+:-pred byte_conversion_2(A,B) #"@var{A} es un byte binario y @var{B} es el byte hexadecimal equivalente. @includedef{byte_conversion_2/2}".
+byte_conversion_2(X,Y):-
+    separar_lista(X,s(s(s(s(0)))),A,B),
+    hex_equiv(C,A),
+    hex_equiv(D,B),
+    juntar_listas([C],[D],Y).
+
+:-pred separar_lista(A,B,C,D) #"@var{C} es una lista que contiene los @var{B} primeros elementos de la lista @var{A} y @var{}D contiene el resto. @includedef{separar_lista/4}".
+separar_lista([H|T],0,[],[H|T]).
+separar_lista([X|Xs],s(Y),[X|Zs],Z) :-
+    separar_lista(Xs,Y,Zs,Z).
+
+:-pred byte_list_crsh(A,B) #"@var{B} es la lista de bytes @var{A} desplazada una posicion a la derecha. @includedef{byte_list_crsh/2}".
+byte_list_crsh([X|Xs],Y):-
+    hex_byte(X),
+    byte_list_conversion([X|Xs],A),
+    unificar(A,B),
+    longitud_lista(B,s(C)),
+    trasponer_drch(B,C,D),
+    restaurar(D,s(s(s(s(s(s(s(s(0)))))))),E),
+    byte_list_conversion_2(E,Y);
+        binary_byte(X),
+        unificar([X|Xs],A),
+        longitud_lista(A,s(B)),
+        trasponer_drch(A,B,C),
+        restaurar(C,s(s(s(s(s(s(s(s(0)))))))),Y).
+
+:- test byte_list_crsh(A,B): (A = [[bind(1),bind(0),bind(1),bind(1),bind(0),bind(1),bind(0),bind(0)],[bind(0),bind(1),bind(0),bind(0),bind(0),bind(1),bind(1),bind(0)],[bind(1),bind(0),bind(1),bind(0),bind(1),bind(0),bind(1),bind(0)],[bind(0),bind(1),bind(1),bind(0),bind(1),bind(1),bind(1),bind(0)]]) => (B = [[bind(0),bind(1),bind(0),bind(1),bind(1),bind(0),bind(1),bind(0)],[bind(0),bind(0),bind(1),bind(0),bind(0),bind(0),bind(1),bind(1)],[bind(0),bind(1),bind(0),bind(1),bind(0),bind(1),bind(0),bind(1)],[bind(0),bind(0),bind(1),bind(1),bind(0),bind(1),bind(1),bind(1)]]) + not_fails.
+
+:- test byte_list_crsh(A,B): (A = [[hexd(b), hexd(4)], [hexd(4), hexd(6)], [hexd(a), hexd(a)], [hexd(6), hexd(e)]]) => (B = [[hexd(5), hexd(a)], [hexd(2), hexd(3)], [hexd(5), hexd(5)], [hexd(3), hexd(7)]]) + not_fails.
+
+:-pred trasponer_drch(A,B,C) #"@var{C} es la lista de bytes @var{A} desplazada @var{B} posiciones a la izquierda. @includedef{trasponer_drch/3}".
+trasponer_drch(X,0,X).
+trasponer_drch(X,s(Y),Z):-
+    trasponer_izq(X,A),
+    trasponer_drch(A,Y,Z).
+
+:-pred byte_xor(A,B,C) #"@var{C} es el resultado de aplicar la operación lógica XOR entre los bytes @var{A} y @var{B}. @includedef{byte_xor/3}".
+byte_xor(X,Y,Z):-
+    hex_byte(X),
+    byte_conversion(X,A),
+    byte_conversion(Y,B),
+    operacion_xor(A,B,C),
+    byte_conversion_2(C,Z);
+        operacion_xor(X,Y,Z).
+
+:-test byte_xor(A,B,C): (A=[bind(0),bind(1),bind(0),bind(1),bind(1),bind(0),bind(1),bind(0)], B = [bind(0),bind(0),bind(1),bind(0),bind(0),bind(0),bind(1),bind(1)]) => (C = [bind(0),bind(1),bind(1),bind(1),bind(1),bind(0),bind(0),bind(1)]) + not_fails.
+
+:-test byte_xor(A,B,C): (A=[hexd(5),hexd(a)], B = [hexd(2),hexd(3)]) => (C = [hexd(7),hexd(9)]) + not_fails.
+
+:-pred operacion_xor(A,B,C) #"@var{C} es el resultado de aplicar la operación lógica XOR entre los bytes @var{A} y @var{B}. @includedef{operacion_xor/3}".
+operacion_xor([],[],[]).
+operacion_xor([X|Xs],[Y|Ys],[Z|Zs]):-
+    igual(X,Y),
+    igual(Z,bind(0)),
+    operacion_xor(Xs,Ys,Zs);
+        no_igual(X,Y),
+        igual(bind(1),Z),
+        operacion_xor(Xs,Ys,Zs).
+
+:-prop igual(A,B) #"@var{A} y @var{B} son iguales. @includedef{igual/2}".
+igual(X,X).
+
+:-prop no_igual(A,B) #"@var{A} y @var{B} no son iguales. @includedef{no_igual/2}".
+no_igual(bind(0),bind(1)).
+no_igual(bind(1),bind(0)).
